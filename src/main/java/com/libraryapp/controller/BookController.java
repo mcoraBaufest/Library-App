@@ -1,6 +1,8 @@
 package com.libraryapp.controller;
 
-import com.libraryapp.model.Book;
+import com.libraryapp.dto.book.request.BookRequest;
+import com.libraryapp.dto.book.request.UpdateBookRequest;
+import com.libraryapp.dto.book.response.BookResponse;
 import com.libraryapp.service.LibraryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,25 +23,26 @@ public class BookController {
     /* ── Req 1 y 2: CRUD básico ────────────────────────────────────────── */
 
     @PostMapping("/books")
-    public ResponseEntity<Book> addBook(@RequestBody Book book) {
-        return ResponseEntity.ok(libraryService.addBook(book));
+    public ResponseEntity<BookResponse> addBook(@RequestBody BookRequest request) {
+        return ResponseEntity.ok(libraryService.addBook(request));
     }
 
     @GetMapping("/books")
-    public ResponseEntity<List<Book>> getAllBooks() {
+    public ResponseEntity<List<BookResponse>> getAllBooks() {
         return ResponseEntity.ok(libraryService.getAllBooks());
     }
 
     @GetMapping("/books/{id}")
-    public ResponseEntity<Book> getBook(@PathVariable Integer id) {
+    public ResponseEntity<BookResponse> getBook(@PathVariable Integer id) {
         return libraryService.getBook(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/books/{id}")
-    public ResponseEntity<Book> updateBook(@PathVariable Integer id, @RequestBody Book book) {
-        return libraryService.updateBook(id, book)
+    public ResponseEntity<BookResponse> updateBook(@PathVariable Integer id,
+                                                   @RequestBody UpdateBookRequest request) {
+        return libraryService.updateBook(id, request)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -62,18 +65,18 @@ public class BookController {
 
     @PostMapping("/queue/{id}")
     public ResponseEntity<String> addToQueue(@PathVariable Integer id) {
-        return libraryService.getBook(id).map(book -> {
-            boolean added = libraryService.addToLoanQueue(book);
-            return added
-                    ? ResponseEntity.ok("Libro agregado a la cola")
-                    : ResponseEntity.<String>ok("El libro ya está en la cola");
-        }).orElse(ResponseEntity.notFound().build());
+        return libraryService.addToLoanQueue(id)
+                .map(added -> added
+                        ? ResponseEntity.ok("Libro agregado a la cola")
+                        : ResponseEntity.<String>ok("El libro ya está en la cola"))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/queue/next")
-    public ResponseEntity<Book> getNextInQueue() {
-        Book next = libraryService.getNextBookToLoan();
-        return next != null ? ResponseEntity.ok(next) : ResponseEntity.noContent().build();
+    public ResponseEntity<BookResponse> getNextInQueue() {
+        return libraryService.getNextBookToLoan()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @PostMapping("/queue/lend")
@@ -87,7 +90,7 @@ public class BookController {
     /* ── Req 5: registro de préstamos ──────────────────────────────────── */
 
     @GetMapping("/loans")
-    public ResponseEntity<Map<String, List<Book>>> getLoans() {
+    public ResponseEntity<Map<String, List<BookResponse>>> getLoans() {
         return ResponseEntity.ok(libraryService.getLoans());
     }
 
@@ -99,3 +102,4 @@ public class BookController {
                 : ResponseEntity.notFound().build();
     }
 }
+

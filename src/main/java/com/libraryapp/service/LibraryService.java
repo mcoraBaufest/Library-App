@@ -1,5 +1,9 @@
 package com.libraryapp.service;
 
+import com.libraryapp.dto.book.request.BookRequest;
+import com.libraryapp.dto.book.request.UpdateBookRequest;
+import com.libraryapp.dto.book.response.BookResponse;
+import com.libraryapp.mapper.BookMapper;
 import com.libraryapp.model.Book;
 import com.libraryapp.repository.BookRepository;
 import org.springframework.stereotype.Service;
@@ -31,24 +35,23 @@ public class LibraryService {
 
     /* ── Req 1 y 2: CRUD de libros ─────────────────────────────────────── */
 
-    public Book addBook(Book book) {
-        return bookRepository.save(book);
+    public BookResponse addBook(BookRequest request) {
+        Book saved = bookRepository.save(BookMapper.toEntity(request));
+        return BookMapper.toResponse(saved);
     }
 
-    public List<Book> getAllBooks() {
-        return bookRepository.findAll();
+    public List<BookResponse> getAllBooks() {
+        return BookMapper.toResponseList(bookRepository.findAll());
     }
 
-    public Optional<Book> getBook(Integer id) {
-        return bookRepository.findById(id);
+    public Optional<BookResponse> getBook(Integer id) {
+        return bookRepository.findById(id).map(BookMapper::toResponse);
     }
 
-    public Optional<Book> updateBook(Integer id, Book updated) {
+    public Optional<BookResponse> updateBook(Integer id, UpdateBookRequest request) {
         return bookRepository.findById(id).map(existing -> {
-            existing.setTitle(updated.getTitle());
-            existing.setAuthor(updated.getAuthor());
-            existing.setYear(updated.getYear());
-            return bookRepository.save(existing);
+            BookMapper.updateEntity(existing, request);
+            return BookMapper.toResponse(bookRepository.save(existing));
         });
     }
 
@@ -58,8 +61,8 @@ public class LibraryService {
         return true;
     }
 
-    public Optional<Book> searchByTitle(String title) {
-        return bookRepository.findByTitleIgnoreCase(title);
+    public Optional<BookResponse> searchByTitle(String title) {
+        return bookRepository.findByTitleIgnoreCase(title).map(BookMapper::toResponse);
     }
 
     @Transactional
@@ -67,12 +70,14 @@ public class LibraryService {
         bookRepository.deleteByTitleIgnoreCase(title);
     }
 
-    public List<Book> getAllBooksSortedByTitle() {
-        return bookRepository.findAll(org.springframework.data.domain.Sort.by("title"));
+    public List<BookResponse> getAllBooksSortedByTitle() {
+        return BookMapper.toResponseList(
+                bookRepository.findAll(org.springframework.data.domain.Sort.by("title")));
     }
 
-    public List<Book> getAllBooksSortedByYear() {
-        return bookRepository.findAll(org.springframework.data.domain.Sort.by("year"));
+    public List<BookResponse> getAllBooksSortedByYear() {
+        return BookMapper.toResponseList(
+                bookRepository.findAll(org.springframework.data.domain.Sort.by("year")));
     }
 
     /* ── Req 3: autores únicos en orden alfabético ──────────────────────── */
@@ -83,14 +88,18 @@ public class LibraryService {
 
     /* ── Req 4: cola de préstamos ───────────────────────────────────────── */
 
-    public boolean addToLoanQueue(Book book) {
-        if (loanQueue.contains(book)) return false;
-        loanQueue.offer(book);
-        return true;
+    // Optional.empty() = libro no encontrado; true = agregado; false = ya estaba
+    public Optional<Boolean> addToLoanQueue(Integer bookId) {
+        return bookRepository.findById(bookId).map(book -> {
+            if (loanQueue.contains(book)) return false;
+            loanQueue.offer(book);
+            return true;
+        });
     }
 
-    public Book getNextBookToLoan() {
-        return loanQueue.peek();
+    public Optional<BookResponse> getNextBookToLoan() {
+        Book next = loanQueue.peek();
+        return next != null ? Optional.of(BookMapper.toResponse(next)) : Optional.empty();
     }
 
     public boolean lendNextBook(String user) {
@@ -116,8 +125,11 @@ public class LibraryService {
         return removed;
     }
 
-    public Map<String, List<Book>> getLoans() {
-        return new HashMap<>(loans);
+    public Map<String, List<BookResponse>> getLoans() {
+        Map<String, List<BookResponse>> result = new HashMap<>();
+        loans.forEach((user, books) -> result.put(user, BookMapper.toResponseList(books)));
+        return result;
     }
 }
+
 
