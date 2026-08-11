@@ -1,24 +1,33 @@
 package com.libraryapp.model;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
 public class Book {
 
-    private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
     private String title;
     private String author;
     private int year;
-    
-    public Book(int id, String title, String author, int year) {
-        this.id = id;
-        this.title = title;
-        this.year = year;
-        this.author = author;
-    }    
 
-    public int getId() {
+    public Book() {}
+
+    public Book(String title, String author, int year) {
+        this.title = title;
+        this.author = author;
+        this.year = year;
+    }
+
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -38,14 +47,15 @@ public class Book {
         this.author = author;
     }
 
-    public int getYear(){
+    public int getYear() {
         return year;
     }
 
-    public void setYear(int year){
-        this.year=year;
+    public void setYear(int year) {
+        this.year = year;
     }
 
+    @Override
     public String toString() {
         return "Book{" +
                 "id=" + id +
@@ -57,21 +67,14 @@ public class Book {
 
     @Override
     public boolean equals(Object object) {
-
-        if (this == object)
-            return true;
-
-        if (!(object instanceof Book))
-            return false;
-
+        if (this == object) return true;
+        if (!(object instanceof Book)) return false;
         Book book = (Book) object;
-
-        return id == book.id;
+        return id != null && id.equals(book.id);
     }
 
     @Override
     public int hashCode() {
-        return Integer.hashCode(id);
+        return id != null ? Integer.hashCode(id) : 0;
     }
-    
 }

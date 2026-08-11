@@ -1,164 +1,123 @@
 package com.libraryapp.service;
 
-
 import com.libraryapp.model.Book;
+import com.libraryapp.repository.BookRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.PriorityQueue;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class LibraryService {
 
-    private ArrayList<Book> books;
-    private Set<String> authors;
-    private PriorityQueue<Book> loanQueue;
-    private HashMap<String, List<Book>> loans;
+    private final BookRepository bookRepository;
 
-    public LibraryService() {
-        this.books = new ArrayList<>();
-        this.authors = new HashSet<>();
+    // Req 4: cola de préstamos con prioridad por año (más nuevos primero)
+    private final PriorityQueue<Book> loanQueue;
+    // Req 5: registro de préstamos usuario → libros
+    private final HashMap<String, List<Book>> loans;
+
+    public LibraryService(BookRepository bookRepository) {
+        this.bookRepository = bookRepository;
         this.loanQueue = new PriorityQueue<>(Comparator.comparing(Book::getYear).reversed());
         this.loans = new HashMap<>();
     }
 
-    /*autores */
-    public List<String> getAuthorsSorted() {
-    return authors.stream()
-            .sorted()
-            .collect(Collectors.toList());
-    }
+    /* ── Req 1 y 2: CRUD de libros ─────────────────────────────────────── */
 
-    /*Libros */
-    public boolean addBook(Book book) {
-        for(Book existingBook : books){
-
-            if(existingBook.getId() == book.getId()){
-                return false;
-            }
-        }
-        books.add(book);
-        authors.add(book.getAuthor());
-        return true;
-    }
-
-    public void removeBook(int id) {
-        books.removeIf(book -> book.getId() == id);
-    }
-
-    public Book getBook(int id) {
-        for (Book book : books) {
-            if (book.getId() == id) {
-                return book;
-            }
-        }
-        return null;
+    public Book addBook(Book book) {
+        return bookRepository.save(book);
     }
 
     public List<Book> getAllBooks() {
-        return new ArrayList<>(books);
+        return bookRepository.findAll();
     }
 
-    public void deleteByTitle(String title){
-
-        books.removeIf(
-            book -> book.getTitle().equalsIgnoreCase(title)
-        );
+    public Optional<Book> getBook(Integer id) {
+        return bookRepository.findById(id);
     }
 
-    public Book searchByTitle(String title){
-
-        for(Book book : books){
-
-            if(book.getTitle().equalsIgnoreCase(title)){
-                return book;
-            }
-        }
-        return null;    
+    public Optional<Book> updateBook(Integer id, Book updated) {
+        return bookRepository.findById(id).map(existing -> {
+            existing.setTitle(updated.getTitle());
+            existing.setAuthor(updated.getAuthor());
+            existing.setYear(updated.getYear());
+            return bookRepository.save(existing);
+        });
     }
 
-    public void sortByTitle(){
-
-        books.sort(
-            Comparator.comparing(Book::getTitle)
-        );
-    }
-
-    public void sortByYear(){
-
-        books.sort(
-            Comparator.comparing(Book::getYear)
-        );
-    }
-
-    /*cola de prestamos*/
-    // Opción 8
-    public boolean addToLoanQueue(Book book){
-
-        if(loanQueue.contains(book)){
-            return false;
-        }
-
-        loanQueue.offer(book);
-
+    public boolean removeBook(Integer id) {
+        if (!bookRepository.existsById(id)) return false;
+        bookRepository.deleteById(id);
         return true;
     }
-    
-    // Opción 9
-    public Book getNextBookToLoan(){
 
+    public Optional<Book> searchByTitle(String title) {
+        return bookRepository.findByTitleIgnoreCase(title);
+    }
+
+    @Transactional
+    public void deleteByTitle(String title) {
+        bookRepository.deleteByTitleIgnoreCase(title);
+    }
+
+    public List<Book> getAllBooksSortedByTitle() {
+        return bookRepository.findAll(org.springframework.data.domain.Sort.by("title"));
+    }
+
+    public List<Book> getAllBooksSortedByYear() {
+        return bookRepository.findAll(org.springframework.data.domain.Sort.by("year"));
+    }
+
+    /* ── Req 3: autores únicos en orden alfabético ──────────────────────── */
+
+    public List<String> getAuthorsSorted() {
+        return bookRepository.findDistinctAuthorsOrdered();
+    }
+
+    /* ── Req 4: cola de préstamos ───────────────────────────────────────── */
+
+    public boolean addToLoanQueue(Book book) {
+        if (loanQueue.contains(book)) return false;
+        loanQueue.offer(book);
+        return true;
+    }
+
+    public Book getNextBookToLoan() {
         return loanQueue.peek();
     }
 
-    public Book loanBook(){
-        return loanQueue.poll(); //poll devuelve y elimina el elemento al frente de la cola
-    }
-
-    // Opción 10
-    public boolean lendNextBook(String user){
-        Book book = loanBook();
-
-        if(book == null){
-            return false;
-        }
-
+    public boolean lendNextBook(String user) {
+        Book book = loanQueue.poll();
+        if (book == null) return false;
         registerLoan(user, book);
         return true;
     }
 
-    public void registerLoan(String user, Book book){
+    /* ── Req 5: registro de préstamos ───────────────────────────────────── */
+
+    public void registerLoan(String user, Book book) {
         user = user.trim().toLowerCase();
-        if(!loans.containsKey(user)){
-            loans.put(user, new ArrayList<>());
-        }
-        loans.get(user).add(book);
+        loans.computeIfAbsent(user, k -> new ArrayList<>()).add(book);
     }
 
-    // Opción 11
-    public void returnBook(String user, Book book){
-
+    public boolean returnBook(String user, Integer bookId) {
         user = user.trim().toLowerCase();
-        if(loans.containsKey(user)){
-            List<Book> userBooks = loans.get(user);
-            userBooks.remove(book);
-
-            if(userBooks.isEmpty()){
-                loans.remove(user);
-            }
-        }
+        List<Book> userBooks = loans.get(user);
+        if (userBooks == null) return false;
+        boolean removed = userBooks.removeIf(b -> b.getId().equals(bookId));
+        if (userBooks.isEmpty()) loans.remove(user);
+        return removed;
     }
 
-    //opcion 12
-    public Map<String,List<Book>> getLoans(){
+    public Map<String, List<Book>> getLoans() {
         return new HashMap<>(loans);
     }
-
-    
 }
+
