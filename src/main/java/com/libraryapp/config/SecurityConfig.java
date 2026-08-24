@@ -13,7 +13,7 @@ public class SecurityConfig {
         http
             .authorizeRequests()
             .antMatchers("/h2-console/**").permitAll()
-            .antMatchers("/books/**").authenticated()
+            .anyRequest().authenticated()
             .and()
             .httpBasic()
             .and()
