@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.time.Year;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -62,6 +63,45 @@ public class BookControllerTest {
 		.andExpect(status().isOk())
 		.andExpect(jsonPath("$.id").value(1))
 		.andExpect(jsonPath("$.title").value("Clean Code"));
+    }
+
+    // Verifica que POST /books rechace campos de texto vacíos.
+    @Test
+    void shouldRejectBookWithBlankFields() throws Exception {
+	BookRequest request = bookRequest(" ", "", 2008);
+
+	mockMvc.perform(post("/books")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(objectMapper.writeValueAsString(request)))
+		.andExpect(status().isBadRequest())
+		.andExpect(jsonPath("$.errors.title").value("El título es obligatorio"))
+		.andExpect(jsonPath("$.errors.author").value("El autor es obligatorio"));
+    }
+
+    // Verifica que POST /books rechace años fuera del rango permitido.
+    @Test
+    void shouldRejectBookWithInvalidYear() throws Exception {
+	BookRequest request = bookRequest("Clean Code", "Robert C. Martin", 1400);
+
+	mockMvc.perform(post("/books")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(objectMapper.writeValueAsString(request)))
+		.andExpect(status().isBadRequest())
+		.andExpect(jsonPath("$.errors.year")
+			.value("El año debe ser igual o posterior a 1450"));
+    }
+
+    // Verifica que POST /books rechace años posteriores al año actual.
+    @Test
+    void shouldRejectBookWithFutureYear() throws Exception {
+	BookRequest request = bookRequest("Clean Code", "Robert C. Martin", Year.now().getValue() + 1);
+
+	mockMvc.perform(post("/books")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(objectMapper.writeValueAsString(request)))
+		.andExpect(status().isBadRequest())
+		.andExpect(jsonPath("$.errors.year")
+			.value("El año no puede ser posterior al año actual"));
     }
 
     // Verifica que GET /books devuelva la lista de libros.
