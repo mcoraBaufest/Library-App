@@ -31,7 +31,7 @@ public class BookController {
     public ResponseEntity<BookResponse> addBook(@Valid @RequestBody BookRequest request,
                                                 BindingResult validationResult) {
         validateRequest(validationResult);
-        return ResponseEntity.ok(libraryService.addBook(request));
+        return ResponseEntity.status(201).body(libraryService.addBook(request));
     }
 
     @GetMapping("/books")
@@ -76,7 +76,7 @@ public class BookController {
     public ResponseEntity<String> addToQueue(@PathVariable Integer id) {
         return libraryService.addToLoanQueue(id)
                 .map(added -> added
-                        ? ResponseEntity.ok("Libro agregado a la cola")
+                ? ResponseEntity.status(201).body("Libro agregado a la cola")
                         : ResponseEntity.<String>ok("El libro ya está en la cola"))
                 .orElse(ResponseEntity.notFound().build());
     }
