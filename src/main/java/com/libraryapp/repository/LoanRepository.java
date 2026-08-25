@@ -13,5 +13,6 @@ public interface LoanRepository extends JpaRepository<Loan, Integer> {
     List<Loan> findByStatusOrderByLoanDateAsc(LoanStatus status);
 
     // Busca el préstamo activo de un usuario para un libro específico.
-    Optional<Loan> findByUserAndBook_IdAndStatus(String user, Integer bookId, LoanStatus status);
+    Optional<Loan> findByUser_UsernameAndBook_IdAndStatus(
+            String username, Integer bookId, LoanStatus status);
 }

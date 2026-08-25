@@ -21,8 +21,9 @@ public class Loan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "user_name", nullable = false)
-    private String user;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_name", referencedColumnName = "username", nullable = false)
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "book_id", nullable = false)
@@ -42,7 +43,7 @@ public class Loan {
     public Loan() {}
 
     // Crea un préstamo con usuario, libro, fecha y estado inicial.
-    public Loan(String user, Book book, LocalDateTime loanDate, LoanStatus status) {
+    public Loan(User user, Book book, LocalDateTime loanDate, LoanStatus status) {
         this.user = user;
         this.book = book;
         this.loanDate = loanDate;
@@ -60,12 +61,12 @@ public class Loan {
     }
 
     // Devuelve el usuario asociado al préstamo.
-    public String getUser() {
+    public User getUser() {
         return user;
     }
 
     // Asigna el usuario asociado al préstamo.
-    public void setUser(String user) {
+    public void setUser(User user) {
         this.user = user;
     }
 

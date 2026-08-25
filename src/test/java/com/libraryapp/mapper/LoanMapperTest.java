@@ -4,6 +4,7 @@ import com.libraryapp.dto.loan.response.LoanResponse;
 import com.libraryapp.model.Book;
 import com.libraryapp.model.Loan;
 import com.libraryapp.model.LoanStatus;
+import com.libraryapp.model.User;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -18,7 +19,7 @@ public class LoanMapperTest {
         Book book = new Book("Clean Code", "Robert C. Martin", 2008);
         book.setId(1);
         LocalDateTime loanDate = LocalDateTime.of(2026, 8, 25, 10, 30);
-        Loan loan = new Loan("juan", book, loanDate, LoanStatus.ACTIVE);
+        Loan loan = new Loan(new User("juan", "juan@example.com"), book, loanDate, LoanStatus.ACTIVE);
         loan.setId(7);
 
         LoanResponse response = LoanMapper.toResponse(loan);

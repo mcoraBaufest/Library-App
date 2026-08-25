@@ -12,7 +12,7 @@ public final class LoanMapper {
     public static LoanResponse toResponse(Loan loan) {
         return new LoanResponse(
                 loan.getId(),
-                loan.getUser(),
+                loan.getUser().getUsername(),
                 BookMapper.toResponse(loan.getBook()),
                 loan.getLoanDate(),
                 loan.getReturnDate(),

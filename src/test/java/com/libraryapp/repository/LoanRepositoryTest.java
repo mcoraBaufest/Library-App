@@ -3,6 +3,7 @@ package com.libraryapp.repository;
 import com.libraryapp.model.Book;
 import com.libraryapp.model.Loan;
 import com.libraryapp.model.LoanStatus;
+import com.libraryapp.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,10 +31,14 @@ public class LoanRepositoryTest {
     @Autowired
     private LoanRepository loanRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     // Limpia los datos antes de cada prueba para mantener aislamiento.
     @BeforeEach
     void cleanDatabase() {
         loanRepository.deleteAll();
+        userRepository.deleteAll();
         bookRepository.deleteAll();
     }
 
@@ -41,10 +46,11 @@ public class LoanRepositoryTest {
     @Test
     void shouldFindActiveLoanByUserAndBook() {
         Book book = bookRepository.save(new Book("Clean Code", "Robert C. Martin", 2008));
+        User user = userRepository.save(new User("juan", "juan@example.com"));
         Loan loan = loanRepository.save(new Loan(
-                "juan", book, LocalDateTime.now(), LoanStatus.ACTIVE));
+            user, book, LocalDateTime.now(), LoanStatus.ACTIVE));
 
-        Optional<Loan> result = loanRepository.findByUserAndBook_IdAndStatus(
+        Optional<Loan> result = loanRepository.findByUser_UsernameAndBook_IdAndStatus(
                 "juan", book.getId(), LoanStatus.ACTIVE);
 
         assertTrue(result.isPresent());
@@ -56,14 +62,16 @@ public class LoanRepositoryTest {
     void shouldFindOnlyActiveLoansOrderedByDate() {
         Book firstBook = bookRepository.save(new Book("First", "Author", 2000));
         Book secondBook = bookRepository.save(new Book("Second", "Author", 2001));
+        User juan = userRepository.save(new User("juan", "juan@example.com"));
+        User maria = userRepository.save(new User("maria", "maria@example.com"));
         LocalDateTime firstDate = LocalDateTime.of(2026, 8, 25, 10, 0);
         LocalDateTime secondDate = firstDate.plusHours(1);
-        loanRepository.save(new Loan("juan", firstBook, firstDate, LoanStatus.ACTIVE));
-        loanRepository.save(new Loan("maria", secondBook, secondDate, LoanStatus.RETURNED));
+        loanRepository.save(new Loan(juan, firstBook, firstDate, LoanStatus.ACTIVE));
+        loanRepository.save(new Loan(maria, secondBook, secondDate, LoanStatus.RETURNED));
 
         List<Loan> activeLoans = loanRepository.findByStatusOrderByLoanDateAsc(LoanStatus.ACTIVE);
 
         assertEquals(1, activeLoans.size());
-        assertEquals("juan", activeLoans.get(0).getUser());
+        assertEquals("juan", activeLoans.get(0).getUser().getUsername());
     }
 }

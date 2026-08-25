@@ -7,8 +7,10 @@ import com.libraryapp.mapper.LoanMapper;
 import com.libraryapp.model.Book;
 import com.libraryapp.model.Loan;
 import com.libraryapp.model.LoanStatus;
+import com.libraryapp.model.User;
 import com.libraryapp.repository.BookRepository;
 import com.libraryapp.repository.LoanRepository;
+import com.libraryapp.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,12 +28,15 @@ public class LoanService {
 
     private final BookRepository bookRepository;
     private final LoanRepository loanRepository;
+    private final UserRepository userRepository;
     private final PriorityQueue<Book> loanQueue;
 
     // Inicializa las dependencias y la cola ordenada por año descendente.
-    public LoanService(BookRepository bookRepository, LoanRepository loanRepository) {
+    public LoanService(BookRepository bookRepository, LoanRepository loanRepository,
+                       UserRepository userRepository) {
         this.bookRepository = bookRepository;
         this.loanRepository = loanRepository;
+        this.userRepository = userRepository;
         this.loanQueue = new PriorityQueue<>(Comparator.comparing(Book::getYear).reversed());
     }
 
@@ -61,13 +66,16 @@ public class LoanService {
     // Persiste un préstamo activo para el usuario normalizado.
     public void registerLoan(String user, Book book) {
         String normalizedUser = normalizeUser(user);
-        loanRepository.save(new Loan(normalizedUser, book, LocalDateTime.now(), LoanStatus.ACTIVE));
+        User libraryUser = userRepository.findByUsername(normalizedUser)
+            .orElseGet(() -> userRepository.save(new User(
+                normalizedUser, normalizedUser + "@library.local")));
+        loanRepository.save(new Loan(libraryUser, book, LocalDateTime.now(), LoanStatus.ACTIVE));
     }
 
     // Marca como devuelto el préstamo activo del usuario y libro indicados.
     public boolean returnBook(String user, Integer bookId) {
         String normalizedUser = normalizeUser(user);
-        Optional<Loan> loan = loanRepository.findByUserAndBook_IdAndStatus(
+        Optional<Loan> loan = loanRepository.findByUser_UsernameAndBook_IdAndStatus(
                 normalizedUser, bookId, LoanStatus.ACTIVE);
         if (!loan.isPresent()) return false;
 
@@ -82,7 +90,7 @@ public class LoanService {
     public Map<String, List<BookResponse>> getLoans() {
         Map<String, List<BookResponse>> result = new HashMap<>();
         loanRepository.findByStatusOrderByLoanDateAsc(LoanStatus.ACTIVE)
-                .forEach(loan -> result.computeIfAbsent(loan.getUser(), key -> new ArrayList<>())
+                .forEach(loan -> result.computeIfAbsent(loan.getUser().getUsername(), key -> new ArrayList<>())
                         .add(BookMapper.toResponse(loan.getBook())));
         return result;
     }

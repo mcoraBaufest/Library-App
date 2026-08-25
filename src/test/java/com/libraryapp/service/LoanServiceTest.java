@@ -5,8 +5,10 @@ import com.libraryapp.dto.loan.response.LoanResponse;
 import com.libraryapp.model.Book;
 import com.libraryapp.model.Loan;
 import com.libraryapp.model.LoanStatus;
+import com.libraryapp.model.User;
 import com.libraryapp.repository.BookRepository;
 import com.libraryapp.repository.LoanRepository;
+import com.libraryapp.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -40,6 +42,9 @@ public class LoanServiceTest {
     // Simula la persistencia de los préstamos.
     @Mock
     private LoanRepository loanRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     // Crea el servicio real e inyecta sus dependencias simuladas.
     @InjectMocks
@@ -98,6 +103,8 @@ public class LoanServiceTest {
     void shouldLendNextBookAndPersistActiveLoan() {
         Book book = book("Clean Code", "Robert C. Martin", 2008, 1);
         when(bookRepository.findById(1)).thenReturn(Optional.of(book));
+        User user = user("juan");
+        when(userRepository.findByUsername("juan")).thenReturn(Optional.of(user));
         loanService.addToLoanQueue(1);
 
         assertTrue(loanService.lendNextBook(" Juan "));
@@ -105,7 +112,7 @@ public class LoanServiceTest {
         ArgumentCaptor<Loan> captor = ArgumentCaptor.forClass(Loan.class);
         verify(loanRepository).save(captor.capture());
         Loan savedLoan = captor.getValue();
-        assertEquals("juan", savedLoan.getUser());
+        assertEquals("juan", savedLoan.getUser().getUsername());
         assertEquals(book, savedLoan.getBook());
         assertEquals(LoanStatus.ACTIVE, savedLoan.getStatus());
         assertNotNull(savedLoan.getLoanDate());
@@ -122,7 +129,7 @@ public class LoanServiceTest {
     void shouldReturnLoanedBookAndMarkItReturned() {
         Book book = book("Clean Code", "Robert C. Martin", 2008, 1);
         Loan loan = loan("juan", book, LoanStatus.ACTIVE);
-        when(loanRepository.findByUserAndBook_IdAndStatus("juan", 1, LoanStatus.ACTIVE))
+        when(loanRepository.findByUser_UsernameAndBook_IdAndStatus("juan", 1, LoanStatus.ACTIVE))
                 .thenReturn(Optional.of(loan));
 
         assertTrue(loanService.returnBook(" JUAN ", 1));
@@ -135,7 +142,7 @@ public class LoanServiceTest {
     // Verifica que falle la devolución sin un préstamo activo.
     @Test
     void shouldReturnFalseWhenActiveLoanDoesNotExist() {
-        when(loanRepository.findByUserAndBook_IdAndStatus("juan", 1, LoanStatus.ACTIVE))
+        when(loanRepository.findByUser_UsernameAndBook_IdAndStatus("juan", 1, LoanStatus.ACTIVE))
                 .thenReturn(Optional.empty());
 
         assertFalse(loanService.returnBook("juan", 1));
@@ -179,8 +186,14 @@ public class LoanServiceTest {
 
     // Crea un préstamo de prueba con fecha y estado indicados.
     private Loan loan(String user, Book book, LoanStatus status) {
-        Loan loan = new Loan(user, book, LocalDateTime.now(), status);
+        Loan loan = new Loan(new User(user, user + "@example.com"), book, LocalDateTime.now(), status);
         loan.setId(1);
         return loan;
+    }
+
+    private User user(String username) {
+        User user = new User(username, username + "@example.com");
+        user.setId(1);
+        return user;
     }
 }
