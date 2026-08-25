@@ -1,7 +1,8 @@
 package com.libraryapp.dto.loan.response;
 
 import com.libraryapp.dto.book.response.BookResponse;
-import com.libraryapp.model.LoanStatus;
+import com.libraryapp.enums.LoanStatus;
+
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

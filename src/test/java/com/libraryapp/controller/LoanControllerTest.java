@@ -2,7 +2,7 @@ package com.libraryapp.controller;
 
 import com.libraryapp.dto.book.response.BookResponse;
 import com.libraryapp.dto.loan.response.LoanResponse;
-import com.libraryapp.model.LoanStatus;
+import com.libraryapp.enums.LoanStatus;
 import com.libraryapp.service.LoanService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

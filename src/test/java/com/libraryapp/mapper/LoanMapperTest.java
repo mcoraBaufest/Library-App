@@ -1,9 +1,9 @@
 package com.libraryapp.mapper;
 
 import com.libraryapp.dto.loan.response.LoanResponse;
+import com.libraryapp.enums.LoanStatus;
 import com.libraryapp.model.Book;
 import com.libraryapp.model.Loan;
-import com.libraryapp.model.LoanStatus;
 import com.libraryapp.model.User;
 import org.junit.jupiter.api.Test;
 

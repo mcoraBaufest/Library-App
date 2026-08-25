@@ -1,4 +1,4 @@
-package com.libraryapp.model;
+package com.libraryapp.enums;
 
 public enum LoanStatus {
     ACTIVE,

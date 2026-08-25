@@ -1,7 +1,8 @@
 package com.libraryapp.repository;
 
+import com.libraryapp.enums.LoanStatus;
 import com.libraryapp.model.Loan;
-import com.libraryapp.model.LoanStatus;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

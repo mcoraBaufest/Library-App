@@ -2,6 +2,8 @@ package com.libraryapp.model;
 
 import org.junit.jupiter.api.Test;
 
+import com.libraryapp.enums.LoanStatus;
+
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

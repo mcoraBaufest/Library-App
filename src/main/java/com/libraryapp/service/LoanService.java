@@ -2,11 +2,11 @@ package com.libraryapp.service;
 
 import com.libraryapp.dto.book.response.BookResponse;
 import com.libraryapp.dto.loan.response.LoanResponse;
+import com.libraryapp.enums.LoanStatus;
 import com.libraryapp.mapper.BookMapper;
 import com.libraryapp.mapper.LoanMapper;
 import com.libraryapp.model.Book;
 import com.libraryapp.model.Loan;
-import com.libraryapp.model.LoanStatus;
 import com.libraryapp.model.User;
 import com.libraryapp.repository.BookRepository;
 import com.libraryapp.repository.LoanRepository;

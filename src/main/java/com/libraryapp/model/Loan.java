@@ -11,6 +11,9 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import com.libraryapp.enums.LoanStatus;
+
 import java.time.LocalDateTime;
 
 @Entity
