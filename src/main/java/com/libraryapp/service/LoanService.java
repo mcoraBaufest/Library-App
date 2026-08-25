@@ -12,6 +12,7 @@ import com.libraryapp.repository.BookRepository;
 import com.libraryapp.repository.LoanRepository;
 import com.libraryapp.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -87,6 +88,7 @@ public class LoanService {
     }
 
     // Devuelve los préstamos activos agrupados por usuario.
+    @Transactional(readOnly = true)
     public Map<String, List<BookResponse>> getLoans() {
         Map<String, List<BookResponse>> result = new HashMap<>();
         loanRepository.findByStatusOrderByLoanDateAsc(LoanStatus.ACTIVE)
@@ -96,6 +98,7 @@ public class LoanService {
     }
 
     // Devuelve el detalle completo de todos los préstamos activos.
+    @Transactional(readOnly = true)
     public List<LoanResponse> getLoanDetails() {
         return loanRepository.findByStatusOrderByLoanDateAsc(LoanStatus.ACTIVE)
                 .stream()

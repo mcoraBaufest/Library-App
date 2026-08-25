@@ -37,9 +37,9 @@ public class LoanRepositoryTest {
     // Limpia los datos antes de cada prueba para mantener aislamiento.
     @BeforeEach
     void cleanDatabase() {
-        loanRepository.deleteAll();
-        userRepository.deleteAll();
-        bookRepository.deleteAll();
+        loanRepository.deleteAllInBatch();
+        userRepository.deleteAllInBatch();
+        bookRepository.deleteAllInBatch();
     }
 
     // Verifica la búsqueda de un préstamo activo por usuario y libro.

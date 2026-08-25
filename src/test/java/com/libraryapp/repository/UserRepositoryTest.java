@@ -25,7 +25,7 @@ public class UserRepositoryTest {
     // Limpia usuarios para aislar cada prueba.
     @BeforeEach
     void cleanDatabase() {
-        userRepository.deleteAll();
+        userRepository.deleteAllInBatch();
     }
 
     // Verifica que un usuario pueda buscarse por su nombre único.

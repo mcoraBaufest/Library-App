@@ -23,7 +23,7 @@ public class BookRepositoryTest {
 
 	@BeforeEach //Se ejecuta antes de cada test y elimina los libros existentes. Esto evita que los datos de data.sql interfieran entre pruebas.
 	void cleanDatabase() {
-		bookRepository.deleteAll();
+		bookRepository.deleteAllInBatch();
 	}
 
 	/*Guarda un libro y luego
