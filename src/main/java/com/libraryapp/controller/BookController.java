@@ -70,47 +70,6 @@ public class BookController {
         return ResponseEntity.ok(libraryService.getAuthorsSorted());
     }
 
-    /* ── Req 4: cola de préstamos ──────────────────────────────────────── */
-
-    @PostMapping("/queue/{id}")
-    public ResponseEntity<String> addToQueue(@PathVariable Integer id) {
-        return libraryService.addToLoanQueue(id)
-                .map(added -> added
-                ? ResponseEntity.status(201).body("Libro agregado a la cola")
-                        : ResponseEntity.<String>ok("El libro ya está en la cola"))
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/queue/next")
-    public ResponseEntity<BookResponse> getNextInQueue() {
-        return libraryService.getNextBookToLoan()
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.noContent().build());
-    }
-
-    @PostMapping("/queue/lend")
-    public ResponseEntity<String> lendNextBook(@RequestParam String user) {
-        boolean lent = libraryService.lendNextBook(user);
-        return lent
-                ? ResponseEntity.ok("Préstamo registrado para: " + user)
-                : ResponseEntity.<String>noContent().build();
-    }
-
-    /* ── Req 5: registro de préstamos ──────────────────────────────────── */
-
-    @GetMapping("/loans") //devuelve un mapa de usuarios y sus libros prestados
-    public ResponseEntity<Map<String, List<BookResponse>>> getLoans() {
-        return ResponseEntity.ok(libraryService.getLoans());
-    }
-
-    @DeleteMapping("/loans/{user}/{bookId}")//devuelve un 200 si se devolvió el libro, o un 404 si no se encontró el préstamo.
-    public ResponseEntity<String> returnBook(@PathVariable String user, @PathVariable Integer bookId) {
-        boolean returned = libraryService.returnBook(user, bookId);
-        return returned
-                ? ResponseEntity.ok("Libro devuelto")
-                : ResponseEntity.notFound().build();
-    }
-
     private void validateRequest(BindingResult validationResult) {
         if (!validationResult.hasErrors()) return; //si no hay errores sale
 

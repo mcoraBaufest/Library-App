@@ -14,10 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.time.Year;
 
@@ -39,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class BookControllerTest {
 
 	// Inyecta la herramienta para simular peticiones HTTP sin levantar un servidor.
-    @Autowired
+	@Autowired
     private MockMvc mockMvc;
 
 	// Inyecta el conversor usado para transformar objetos Java en JSON.
@@ -194,106 +191,6 @@ public class BookControllerTest {
 		.andExpect(status().isOk())
 		.andExpect(jsonPath("$[0]").value("Alpha Author"))
 		.andExpect(jsonPath("$[1]").value("Zeta Author"));
-    }
-
-    // Verifica que POST /queue/{id} agregue un libro a la cola.
-    @Test
-    void shouldAddBookToQueue() throws Exception {
-	when(libraryService.addToLoanQueue(1)).thenReturn(Optional.of(true));
-
-	mockMvc.perform(post("/queue/1"))
-		.andExpect(status().isCreated())
-		.andExpect(content().string("Libro agregado a la cola"));
-    }
-
-    // Verifica que POST /queue/{id} devuelva 404 si el libro no existe.
-    @Test
-    void shouldReturnNotFoundWhenAddingMissingBookToQueue() throws Exception {
-	when(libraryService.addToLoanQueue(1)).thenReturn(Optional.empty());
-
-	mockMvc.perform(post("/queue/1"))
-		.andExpect(status().isNotFound());
-    }
-
-    // Verifica el mensaje de POST /queue/{id} cuando el libro ya está agregado.
-    @Test
-    void shouldReportBookAlreadyInQueue() throws Exception {
-	when(libraryService.addToLoanQueue(1)).thenReturn(Optional.of(false));
-
-	mockMvc.perform(post("/queue/1"))
-		.andExpect(status().isOk())
-		.andExpect(content().string("El libro ya está en la cola"));
-    }
-
-    // Verifica que GET /queue/next devuelva el siguiente libro.
-    @Test
-    void shouldGetNextBookInQueue() throws Exception {
-	when(libraryService.getNextBookToLoan())
-		.thenReturn(Optional.of(bookResponse(1, "Clean Code", "Robert C. Martin", 2008)));
-
-	mockMvc.perform(get("/queue/next"))
-		.andExpect(status().isOk())
-		.andExpect(jsonPath("$.title").value("Clean Code"));
-    }
-
-    // Verifica que GET /queue/next devuelva 204 cuando la cola está vacía.
-    @Test
-    void shouldReturnNoContentWhenQueueIsEmpty() throws Exception {
-	when(libraryService.getNextBookToLoan()).thenReturn(Optional.empty());
-
-	mockMvc.perform(get("/queue/next"))
-		.andExpect(status().isNoContent());
-    }
-
-    // Verifica que POST /queue/lend registre un préstamo exitoso.
-    @Test
-    void shouldLendNextBook() throws Exception {
-	when(libraryService.lendNextBook("juan")).thenReturn(true);
-
-	mockMvc.perform(post("/queue/lend").param("user", "juan"))
-		.andExpect(status().isOk())
-		.andExpect(content().string("Préstamo registrado para: juan"));
-    }
-
-    // Verifica que POST /queue/lend devuelva 204 si no hay libros para prestar.
-    @Test
-    void shouldReturnNoContentWhenLendingEmptyQueue() throws Exception {
-	when(libraryService.lendNextBook("juan")).thenReturn(false);
-
-	mockMvc.perform(post("/queue/lend").param("user", "juan"))
-		.andExpect(status().isNoContent());
-    }
-
-    // Verifica que GET /loans devuelva los préstamos registrados.
-    @Test
-    void shouldGetLoans() throws Exception {
-	Map<String, List<BookResponse>> loans = new HashMap<>();
-	loans.put("juan", Collections.singletonList(
-		bookResponse(1, "Clean Code", "Robert C. Martin", 2008)));
-	when(libraryService.getLoans()).thenReturn(loans);
-
-	mockMvc.perform(get("/loans"))
-		.andExpect(status().isOk())
-		.andExpect(jsonPath("$.juan[0].title").value("Clean Code"));
-    }
-
-    // Verifica que DELETE /loans/{user}/{bookId} devuelva 200 al devolver un libro.
-    @Test
-    void shouldReturnBook() throws Exception {
-	when(libraryService.returnBook("juan", 1)).thenReturn(true);
-
-	mockMvc.perform(delete("/loans/juan/1"))
-		.andExpect(status().isOk())
-		.andExpect(content().string("Libro devuelto"));
-    }
-
-    // Verifica que DELETE /loans/{user}/{bookId} devuelva 404 si no existe el préstamo.
-    @Test
-    void shouldReturnNotFoundWhenReturningMissingBook() throws Exception {
-	when(libraryService.returnBook("juan", 1)).thenReturn(false);
-
-	mockMvc.perform(delete("/loans/juan/1"))
-		.andExpect(status().isNotFound());
     }
 
     private BookRequest bookRequest(String title, String author, int year) {

@@ -175,79 +175,6 @@ public class BookServiceTest {
 		assertEquals(Arrays.asList("Alpha Author", "Zeta Author"), authors);
 	}
 
-	// Verifica que un libro existente se agregue a la cola de préstamos.
-	@Test
-	void shouldAddBookToLoanQueue() {
-		when(bookRepository.findById(1))
-				.thenReturn(Optional.of(book("Clean Code", "Robert C. Martin", 2008, 1)));
-
-		Optional<Boolean> result = libraryService.addToLoanQueue(1);
-
-		assertTrue(result.isPresent());
-		assertTrue(result.get());
-	}
-
-	// Verifica que la cola priorice el libro con el año más reciente.
-	@Test
-	void shouldReturnNewestBookFirstFromLoanQueue() {
-		Book oldBook = book("Old book", "Author", 1990, 1);
-		Book newBook = book("New book", "Author", 2020, 2);
-		when(bookRepository.findById(1)).thenReturn(Optional.of(oldBook));
-		when(bookRepository.findById(2)).thenReturn(Optional.of(newBook));
-
-		libraryService.addToLoanQueue(1);
-		libraryService.addToLoanQueue(2);
-
-		Optional<BookResponse> nextBook = libraryService.getNextBookToLoan();
-
-		assertTrue(nextBook.isPresent());
-		assertEquals("New book", nextBook.get().getTitle());
-	}
-
-	// Verifica que el siguiente libro se preste al usuario normalizado.
-	@Test
-	void shouldLendNextBookToNormalizedUser() {
-		Book book = book("Clean Code", "Robert C. Martin", 2008, 1);
-		when(bookRepository.findById(1)).thenReturn(Optional.of(book));
-		libraryService.addToLoanQueue(1);
-
-		assertTrue(libraryService.lendNextBook(" Juan "));
-
-		Map<String, List<BookResponse>> loans = libraryService.getLoans();
-		assertTrue(loans.containsKey("juan"));
-		assertEquals("Clean Code", loans.get("juan").get(0).getTitle());
-	}
-
-	// Verifica que no se pueda prestar si la cola está vacía.
-	@Test
-	void shouldReturnFalseWhenLendingFromEmptyQueue() {
-		assertFalse(libraryService.lendNextBook("juan"));
-	}
-
-	// Verifica que un usuario pueda devolver un libro prestado.
-	@Test
-	void shouldReturnLoanedBook() {
-		Book book = book("Clean Code", "Robert C. Martin", 2008, 1);
-		libraryService.registerLoan(" JUAN ", book);
-
-		assertTrue(libraryService.returnBook("juan", 1));
-		assertTrue(libraryService.getLoans().isEmpty());
-	}
-
-	// Verifica que no se devuelva un libro que el usuario no tiene.
-	@Test
-	void shouldReturnFalseWhenUserHasNoLoanForBook() {
-		libraryService.registerLoan("juan", book("Clean Code", "Robert C. Martin", 2008, 1));
-
-		assertFalse(libraryService.returnBook("juan", 2));
-	}
-
-	// Verifica que no haya préstamos registrados inicialmente.
-	@Test
-	void shouldReturnEmptyLoansWhenThereAreNoLoans() {
-		assertEquals(Collections.emptyMap(), libraryService.getLoans());
-	}
-
 	// Crea un request con los datos necesarios para agregar un libro.
 	private BookRequest bookRequest(String title, String author, int year) {
 		BookRequest request = new BookRequest();
@@ -272,4 +199,5 @@ public class BookServiceTest {
 		book.setId(id);
 		return book;
 	}
+
 }
